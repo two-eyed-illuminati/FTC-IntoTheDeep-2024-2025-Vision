@@ -3,7 +3,7 @@ import numpy as np
 
 def runPipeline(original_image, llrobot):
     best_contour = np.array([[]])
-    llpython = []
+    llpython = [False]
 
     image = cv2.cvtColor(original_image, cv2.COLOR_BGR2YCrCb)
 
@@ -75,17 +75,9 @@ def runPipeline(original_image, llrobot):
         else:
             angle = closest_rect[2] - 90
         image = cv2.putText(image, str(angle)[:5]+" deg", (int(closest_rect[0][0] - 10), int(closest_rect[0][1] - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (100, 255, 0), 2)
-        llpython = [angle, 640/2 - closest_rect[0][0], 480/2 - closest_rect[0][1]]
+        llpython = [True, angle, 640/2 - closest_rect[0][0], 480/2 - closest_rect[0][1]]
 
     #Convert back to BGR
-    edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
     image = cv2.cvtColor(image, cv2.COLOR_YCrCb2BGR)
 
-    adapt = cv2.adaptiveThreshold(cv2.split(filtered_image)[0],255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
-            cv2.THRESH_BINARY,11,2)
-    adapt = cv2.bitwise_and(adapt, mask)
-    adapt = cv2.cvtColor(adapt, cv2.COLOR_GRAY2BGR)
-    filtered_darkness = cv2.cvtColor(cv2.split(filtered_image)[0], cv2.COLOR_GRAY2BGR)
-    filtered_image = cv2.cvtColor(filtered_image, cv2.COLOR_YCrCb2BGR)
-
-    return best_contour, edges, llpython
+    return best_contour, image, llpython
