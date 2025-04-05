@@ -8,10 +8,12 @@ def runPipeline(original_image, llrobot):
     image = cv2.cvtColor(original_image, cv2.COLOR_BGR2YCrCb)
 
     #Blur to reduce noisiness
-    filtered_image = cv2.GaussianBlur(image, (7, 7), sigmaX=0, sigmaY=0)
+    filtered_image = cv2.GaussianBlur(image, (11, 11), sigmaX=0, sigmaY=0)
     #Filter out everything that's not the same color as the sample
-    mask = cv2.inRange(filtered_image, np.array([27, 130, 70]),
-                                        np.array([150, 170, 118]))
+    image_hls = cv2.cvtColor(original_image, cv2.COLOR_BGR2HLS)
+    mask = cv2.inRange(cv2.GaussianBlur(image_hls, (11, 11), sigmaX=0, sigmaY=0),
+                                        np.array([10, 0, 100]),
+                                        np.array([30, 255, 255]))
     filtered_image = cv2.bitwise_and(filtered_image, filtered_image, mask = mask)
     
     mask_sum = np.sum(mask)
@@ -24,12 +26,12 @@ def runPipeline(original_image, llrobot):
         #Detect large brightness changes between pixels; this likely represents the edge/border of a sample
         original_edges = cv2.Canny(image=cv2.split(filtered_image)[0], threshold1=threshold, threshold2=threshold*2)
         edge_sum = np.sum(original_edges)
-        threshold += 2
+        threshold += 1
         if edge_sum / mask_sum < 0.13:
             break
     
     #Make sure there aren't any breaks/gaps in the middle of an edge
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 4))
     if(edge_sum != 0):
         original_edges = cv2.dilate(original_edges, kernel)
 
@@ -77,7 +79,6 @@ def runPipeline(original_image, llrobot):
 
     #Convert back to BGR
     edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-    print(image[240][320])
     image = cv2.cvtColor(image, cv2.COLOR_YCrCb2BGR)
 
     adapt = cv2.adaptiveThreshold(cv2.split(filtered_image)[0],255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
