@@ -1,7 +1,11 @@
 import cv2
 import numpy as np
 
+last_threshold = 10
+
 def runPipeline(original_image, llrobot):
+    global last_threshold
+
     best_contour = np.array([[]])
     llpython = [False]
 
@@ -15,10 +19,10 @@ def runPipeline(original_image, llrobot):
                                         np.array([10, 0, 100]),
                                         np.array([30, 255, 255]))
     filtered_image = cv2.bitwise_and(filtered_image, filtered_image, mask = mask)
-    
+
     mask_sum = np.sum(mask)
     edge_sum = mask_sum
-    threshold = 5
+    threshold = last_threshold - 5
     original_edges = None
     #Account for different lighting conditions requiring different thresholds for edge detection;
     #If a lot of the area we're looking at is detected as edges, then our threshold is probably too low
@@ -26,6 +30,7 @@ def runPipeline(original_image, llrobot):
         #Detect large brightness changes between pixels; this likely represents the edge/border of a sample
         original_edges = cv2.Canny(image=cv2.split(filtered_image)[0], threshold1=threshold, threshold2=threshold*2)
         edge_sum = np.sum(original_edges)
+        last_threshold = threshold
         threshold += 1
         if edge_sum / mask_sum < 0.13:
             break
